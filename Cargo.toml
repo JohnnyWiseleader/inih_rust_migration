@@ -1,0 +1,22 @@
+[package]
+name = "inih_rust_migration"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+authors = ["John Aschenbrenner <leadthrustrength@gmail.com>"]
+license = "MIT OR BSD-3-Clause"
+description = "Rust wrapper or port of the INIH C INI parser"
+repository = "https://github.com/yourname/inih_rust_migration"
+readme = "README.md"
+
+[lib]
+name = "inih_rust_migration"
+path = "src/lib.rs"
+
+[dependencies]
+libc = "0.2"
+
+[build-dependencies]
+bindgen = "0.69"
+cc = "1.0"
+
