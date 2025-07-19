@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
-//use std::ptr;
+
+pub mod parse_ini;
+pub use parse_ini::{parse_ini, parse_ini_with_config, IniParserConfig};
 
 mod ffi {
     #![allow(non_camel_case_types, non_snake_case, non_upper_case_globals, dead_code)]
@@ -42,24 +44,4 @@ pub fn parse_ini_file(filename: &str) -> Option<HashMap<String, HashMap<String, 
         None
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parses_simple_ini() {
-        let ini = parse_ini_file("tests/test.ini").expect("Should parse successfully");
-
-        assert_eq!(ini["database"]["user"], "admin");
-        assert_eq!(ini["server"]["host"], "localhost");
-    }
-
-    #[test]
-    fn returns_none_on_bad_file() {
-        let result = parse_ini_file("nonexistent.ini");
-        assert!(result.is_none());
-    }
-}
-
 

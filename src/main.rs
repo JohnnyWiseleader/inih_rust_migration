@@ -1,7 +1,7 @@
 use inih_rust_migration::parse_ini_file;
 
 fn main() {
-    match parse_ini_file("tests/test.ini") {
+    match parse_ini_file("tests/sample.ini") {
         Some(data) => {
             println!("{:#?}", data);
             println!("DB user: {}", data["database"]["user"]);
