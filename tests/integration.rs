@@ -71,17 +71,18 @@ fn test_inline_comments_trimmed() {
     assert_eq!(parsed["network"]["address"], "192.168.1.1");
     assert_eq!(parsed["network"]["dns"], "8.8.8.8");
 }
-
-////////////////////////////////////////////////////////////////////
 #[test]
 fn test_quoted_string_with_equals() {
-    let parsed = parse_ini(
-        &get_test_path("quoted_equals.ini"),
-    )
-    .unwrap();
+    let mut config = IniParserConfig::default();
+    config.allow_quoted_with_equals = true;
+
+    let parsed = parse_ini_with_config(&get_test_path("quoted_equals.ini"), &config).unwrap();
+  
     assert_eq!(parsed["user"]["description"], "a=very=custom=user");
 }
 
+
+////////////////////////////////////////////////////////////////////
 #[test]
 fn test_empty_values() {
     let parsed = parse_ini(
