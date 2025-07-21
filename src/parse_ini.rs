@@ -134,7 +134,6 @@ pub fn parse_ini_with_config(
     let file = File::open(filename)?;
     let mut reader = BufReader::new(file);
     let mut lines = std::io::BufRead::lines(&mut reader).peekable();
-
     let mut result: HashMap<String, HashMap<String, String>> = HashMap::new();
     let mut current_section = "default".to_string();
 
