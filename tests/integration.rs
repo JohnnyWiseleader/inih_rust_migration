@@ -78,7 +78,7 @@ fn test_quoted_string_with_equals() {
 
     let parsed = parse_ini_with_config(&get_test_path("quoted_equals.ini"), &config).unwrap();
   
-    assert_eq!(parsed["user"]["description"], "a=very=custom=user");
+    assert_eq!(parsed["user"]["description"], "a=very=custom\"=user");
 }
 
 

@@ -27,25 +27,7 @@ impl Default for IniParserConfig {
     }
 }
 
-trait IgnoreWhitespace {
-    fn trim_line(&self, line: &str) -> String;
-}
-
-impl IgnoreWhitespace for IniParserConfig {
-    fn trim_line(&self, line: &str) -> String {
-        if self.ignore_whitespace {
-            line.trim().to_string()
-        } else {
-            line.to_string()
-        }
-    }
-}
-
-trait AllowBOM {
-    fn skip_bom(&self, line: String) -> String;
-}
-
-impl AllowBOM for IniParserConfig {
+impl IniParserConfig {
     fn skip_bom(&self, line: String) -> String {
         if self.allow_bom && line.starts_with('\u{FEFF}') {
             line.trim_start_matches('\u{FEFF}').to_string()
@@ -53,13 +35,7 @@ impl AllowBOM for IniParserConfig {
             line
         }
     }
-}
 
-trait AllowInlineComments {
-    fn remove_inline_comments(&self, line: String) -> String;
-}
-
-impl AllowInlineComments for IniParserConfig {
     fn remove_inline_comments(&self, line: String) -> String {
         let mut value = line;
         if self.allow_inline_comments {
@@ -73,33 +49,16 @@ impl AllowInlineComments for IniParserConfig {
         }
         value
     }
-}
 
-trait AllowQuotedWithEquals {
-    fn quoted_with_equals(&self, line: String) -> String;
-}
-
-impl AllowQuotedWithEquals for IniParserConfig {
-    fn quoted_with_equals(&self, line: String) -> String {
-        let mut value = line;
-        if self.allow_quoted_with_equals {
-            if value.contains('=') {
-                value = strip_inline_comment(&value.to_string()).to_string();
-                value = value.trim().replace("\"", "").to_string();
-            }
+    fn parse_quoted_value(&self, line: String) -> String {
+        if self.allow_quoted_with_equals && line.contains('=') {
+            let stripped = strip_comment_outside_quotes(&line);
+            strip_outer_quotes(stripped).to_string()
+        } else {
+            line
         }
-        value
     }
-}
-trait AllowMultiline {
-    fn multi_line(
-        &self,
-        lines: &mut Peekable<Lines<&mut BufReader<File>>>,
-        value: String,
-    ) -> Result<String, std::io::Error>;
-}
 
-impl AllowMultiline for IniParserConfig {
     fn multi_line(
         &self,
         lines: &mut Peekable<Lines<&mut BufReader<File>>>,
@@ -138,11 +97,11 @@ pub fn parse_ini_with_config(
     let mut current_section = "default".to_string();
 
     while let Some(Ok(mut line)) = lines.next() {
-        line = config.trim_line(&line);
+        line = line.trim().to_string();
         line = config.skip_bom(line);
 
         match classify_line(&line) {
-            LineType::Comment | LineType::Empty => continue,
+            LineType::Comment => continue,
             LineType::Section(name) => {
                 current_section = name;
             }
@@ -151,8 +110,8 @@ pub fn parse_ini_with_config(
                 value = config.multi_line(&mut lines, value)?;
 
                 // parse quoted with equals strings, e.g.
-                // value = "a=very=custom=user"
-                value = config.quoted_with_equals(value);
+                // handles values like: value = "a=very=custom=user" 
+                value = config.parse_quoted_value(value);
 
                 // alllow inline comments
                 value = config.remove_inline_comments(value);
@@ -168,10 +127,13 @@ pub fn parse_ini_with_config(
     Ok(result)
 }
 
+/// Classifies a line in the INI file.
 enum LineType {
-    Empty,
+    /// Comment line or empty line.
     Comment,
+    /// Section header like [section].
     Section(String),
+    /// Key-value pair like key=value.
     KeyValue(String, String),
 }
 
@@ -185,7 +147,7 @@ fn classify_line(line: &str) -> LineType {
         let value = line[pos + 1..].trim().to_string();
         LineType::KeyValue(key, value)
     } else {
-        LineType::Empty
+        LineType::Comment
     }
 }
 
@@ -194,6 +156,29 @@ fn strip_inline_comment(line: &str) -> &str {
         .next()
         .unwrap_or(line)
         .trim_end()
+}
+
+fn strip_comment_outside_quotes(line: &str) -> &str {
+    let mut in_quotes = false;
+
+    for (i, c) in line.char_indices() {
+        match c {
+            '"' => in_quotes = !in_quotes,
+            ';' | '#' if !in_quotes => return &line[..i].trim_end(),
+            _ => {}
+        }
+    }
+
+    line.trim_end()
+}
+
+fn strip_outer_quotes(line: &str) -> &str {
+    let trimmed = line.trim();
+    if trimmed.starts_with('"') && trimmed.ends_with('"') && trimmed.len() >= 2 {
+        &trimmed[1..trimmed.len() - 1]
+    } else {
+        trimmed
+    }
 }
 
 /// parse_ini with default config settings
