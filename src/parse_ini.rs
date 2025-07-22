@@ -50,7 +50,7 @@ impl IniParserConfig {
         value
     }
 
-    fn parse_quoted_value(&self, line: String) -> String {
+    fn clean_quoted_value(&self, line: String) -> String {
         if self.allow_quoted_with_equals && line.contains('=') {
             let stripped = strip_comment_outside_quotes(&line);
             strip_outer_quotes(stripped).to_string()
@@ -111,7 +111,7 @@ pub fn parse_ini_with_config(
 
                 // parse quoted with equals strings, e.g.
                 // handles values like: value = "a=very=custom=user" 
-                value = config.parse_quoted_value(value);
+                value = config.clean_quoted_value(value);
 
                 // alllow inline comments
                 value = config.remove_inline_comments(value);
