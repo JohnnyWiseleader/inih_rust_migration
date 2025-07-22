@@ -128,7 +128,7 @@ pub fn parse_ini_with_config(
 }
 
 /// Classifies a line in the INI file.
-enum LineType {
+pub enum LineType {
     /// Comment line or empty line.
     Comment,
     /// Section header like [section].
