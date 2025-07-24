@@ -15,15 +15,17 @@ struct ServerSection {
 
 #[derive(Debug, Deserialize)]
 struct DatabaseSection {
-    user: String,     // matches "user" in the INI
-    password: String, // matches "password" in the INI
+    admin: bool,
+    user: String,
+    password: String,
 }
 
 fn main() {
     let config = IniParserConfig::default();
     let parsed: Config = from_ini_file("tests/sample.ini", &config).unwrap();
     println!("{:#?}", parsed);
-    println!("Database user {}", parsed.database.user);
-    println!("Port number {}", parsed.server.port);
-    println!("Database password {}", parsed.database.password);
+    println!("Port number = {}", parsed.server.port);
+    println!("Database user is {}", parsed.database.user);
+    println!("Database user is admin {}", parsed.database.admin);
+    println!("Database password is {}", parsed.database.password);
 }
